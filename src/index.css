@@ -8,8 +8,16 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 60 30% 97%;
+    --foreground: 340 25% 20%;
+
+    /* Sakura palette */
+    --sakura-petal-light: 350 100% 96%;
+    --sakura-petal: 345 80% 88%;
+    --sakura-petal-deep: 340 70% 78%;
+    --sakura-center: 45 90% 70%;
+    --sakura-center-deep: 25 80% 60%;
+    --sakura-glow: 345 100% 90%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
