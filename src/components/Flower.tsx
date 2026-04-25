@@ -141,8 +141,7 @@ const Flower = ({ bloomLevel, size = 56, label }: FlowerProps) => {
           width: size,
           height: size,
           transform: `scale(${overallScale + pulse})`,
-          transition:
-            "transform 1200ms cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: `transform ${transitionMs}ms cubic-bezier(0.4, 0, 0.2, 1)`,
         }}
       >
         {/* Petals */}
@@ -156,7 +155,7 @@ const Flower = ({ bloomLevel, size = 56, label }: FlowerProps) => {
                 width: 0,
                 height: 0,
                 transform: `translate(-50%, -50%) rotate(${angle + petalRotate}deg)`,
-                transition: "transform 1200ms cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: `transform ${transitionMs}ms cubic-bezier(0.4, 0, 0.2, 1)`,
               }}
             >
               <div
