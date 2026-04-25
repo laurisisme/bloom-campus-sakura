@@ -25,7 +25,14 @@ export function useSensorData(endpoint: string, intervalMs = 2000) {
       try {
         const res = await fetch(endpoint, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as SensorPayload;
+        const raw = (await res.json()) as Record<string, unknown>;
+        // Backend may return values as strings (e.g. "94"). Normalize to numbers
+        // so consumers can rely on `typeof value === "number"`.
+        const json: SensorPayload = {};
+        for (const [k, v] of Object.entries(raw)) {
+          const n = typeof v === "number" ? v : parseFloat(String(v));
+          if (Number.isFinite(n)) json[k] = n;
+        }
         console.log("[Sensor Data]", json); // Log sensor values to console
         if (cancelled.current) return;
         setData(json);
