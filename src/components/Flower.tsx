@@ -66,10 +66,10 @@ const Flower = ({ bloomLevel, size = 56, label }: FlowerProps) => {
   //   semi   → petals translate outward + rotate (the "opening")
   //   bloom  → final scale settle + glow + breathing
   const overallScale =
-    0.30 +              // baseline bud size
-    budP   * 0.18 +     // bud → ~0.48
-    semiP  * 0.32 +     // semi → ~0.80
-    bloomP * 0.30;      // bloom → ~1.10
+    0.35 +              // baseline bud size (was 0.30)
+    budP   * 0.22 +     // bud → ~0.57 (was ~0.48)
+    semiP  * 0.40 +     // semi → ~0.97 (was ~0.80)
+    bloomP * 0.45;       // bloom → ~1.42 (was ~1.10)
 
   const petalSeparation =
     semiP  * (size * 0.13) +  // most of the outward push happens here
