@@ -83,7 +83,8 @@ const Index = () => {
     const interval = setInterval(() => {
       // Occasionally pick new mock targets for unmapped buildings.
       BUILDINGS.forEach((b) => {
-        if (!b.sensorKey && Math.random() < 0.15) {
+        const isMapped = !!b.sensorKey || (b.sensorKeys && b.sensorKeys.length > 0);
+        if (!isMapped && Math.random() < 0.15) {
           targetsRef.current[b.id] = Math.random() * 100;
         }
       });
