@@ -9,7 +9,7 @@ import { useSensorData } from "@/hooks/useSensorData";
  * The backend is expected to return JSON like: { s1: 72, s2: 41, ... }
  * where each value is a bloom level between 0 and 100.
  */
-const SENSOR_ENDPOINT = "https://your-app.onrender.com/data";
+const SENSOR_ENDPOINT = "https://blooming-dku.onrender.com/data";
 const POLL_INTERVAL_MS = 2000;
 
 // Building positions as percentages of the map image (x, y).
