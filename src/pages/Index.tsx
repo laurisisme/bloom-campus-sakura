@@ -1,12 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import campusMap from "@/assets/campus-map.jpg";
 import Flower from "@/components/Flower";
+import { useSensorData } from "@/hooks/useSensorData";
+
+/**
+ * 🔌 SENSOR BACKEND
+ * Replace this URL with your real endpoint when ready.
+ * The backend is expected to return JSON like: { s1: 72, s2: 41, ... }
+ * where each value is a bloom level between 0 and 100.
+ */
+const SENSOR_ENDPOINT = "https://your-app.onrender.com/data";
+const POLL_INTERVAL_MS = 2000;
 
 // Building positions as percentages of the map image (x, y).
-// Tweak these to align flowers precisely over each building.
-const BUILDINGS: { id: string; name: string; x: number; y: number; size?: number }[] = [
-  { id: "faculty", name: "Faculty Residence", x: 22, y: 32 },
-  { id: "residence", name: "Residence Hall", x: 33, y: 28 },
+// `sensorKey` maps a building to a key in the backend JSON payload.
+// Buildings without a sensorKey will gently drift on mock data.
+const BUILDINGS: {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  size?: number;
+  sensorKey?: string;
+}[] = [
+  { id: "faculty", name: "Faculty Residence", x: 22, y: 32, sensorKey: "s1" },
+  { id: "residence", name: "Residence Hall", x: 33, y: 28, sensorKey: "s2" },
   { id: "service", name: "Service Building", x: 49, y: 30 },
   { id: "ugrad", name: "Undergraduate Student Residence", x: 73, y: 32 },
   { id: "water", name: "Water Pavilion", x: 34, y: 41 },
@@ -27,6 +45,8 @@ const BUILDINGS: { id: string; name: string; x: number; y: number; size?: number
   { id: "visitor", name: "Visitor Center", x: 73, y: 70 },
 ];
 
+const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
+
 const Index = () => {
   // Each building has its own bloom level 0..100, drifting independently.
   const [bloomLevels, setBloomLevels] = useState<Record<string, number>>(() => {
@@ -39,20 +59,29 @@ const Index = () => {
 
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Mock "sensor" updates: every few seconds, each flower drifts toward a new target.
-  useEffect(() => {
-    const targets: Record<string, number> = {};
-    const velocities: Record<string, number> = {};
-    BUILDINGS.forEach((b) => {
-      targets[b.id] = Math.random() * 100;
-      velocities[b.id] = 0;
-    });
+  // 🔌 Live sensor feed
+  const { data: sensorData, status: sensorStatus } = useSensorData(
+    SENSOR_ENDPOINT,
+    POLL_INTERVAL_MS,
+  );
 
+  // Mock drift targets (used for buildings without a sensorKey, or as a
+  // fallback when the backend is unreachable).
+  const targetsRef = useRef<Record<string, number>>({});
+  if (Object.keys(targetsRef.current).length === 0) {
+    BUILDINGS.forEach((b) => {
+      targetsRef.current[b.id] = Math.random() * 100;
+    });
+  }
+
+  // Smoothly ease every flower toward its target each tick.
+  // Targets come from the live sensor when available, else from mock drift.
+  useEffect(() => {
     const interval = setInterval(() => {
-      // Occasionally pick new targets
+      // Occasionally pick new mock targets for unmapped buildings.
       BUILDINGS.forEach((b) => {
-        if (Math.random() < 0.15) {
-          targets[b.id] = Math.random() * 100;
+        if (!b.sensorKey && Math.random() < 0.15) {
+          targetsRef.current[b.id] = Math.random() * 100;
         }
       });
 
@@ -60,8 +89,14 @@ const Index = () => {
         const next: Record<string, number> = {};
         BUILDINGS.forEach((b) => {
           const cur = prev[b.id];
-          const target = targets[b.id];
-          // Smooth easing toward target
+
+          // Prefer live sensor value if this building is mapped and the
+          // backend returned a usable number for that key.
+          let target = targetsRef.current[b.id];
+          if (b.sensorKey && sensorData && typeof sensorData[b.sensorKey] === "number") {
+            target = clamp(sensorData[b.sensorKey]);
+          }
+
           next[b.id] = cur + (target - cur) * 0.18;
         });
         return next;
@@ -69,7 +104,7 @@ const Index = () => {
     }, 1500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [sensorData]);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-background">
@@ -83,11 +118,34 @@ const Index = () => {
             a quiet aerial view · campus in bloom
           </p>
         </div>
-        {selected && (
-          <div className="pointer-events-auto rounded-full bg-foreground/85 px-4 py-2 text-xs font-medium text-background backdrop-blur-md">
-            {BUILDINGS.find((b) => b.id === selected)?.name}
+        <div className="pointer-events-auto flex items-center gap-3">
+          {/* Live sensor status pill */}
+          <div
+            className="flex items-center gap-2 rounded-full bg-foreground/5 px-3 py-1.5 text-[10px] font-light tracking-[0.2em] text-foreground/60 backdrop-blur-md"
+            title={SENSOR_ENDPOINT}
+          >
+            <span
+              className={
+                "h-1.5 w-1.5 rounded-full " +
+                (sensorStatus === "live"
+                  ? "bg-emerald-500 animate-pulse"
+                  : sensorStatus === "error"
+                    ? "bg-rose-400"
+                    : "bg-foreground/30")
+              }
+            />
+            {sensorStatus === "live"
+              ? "LIVE"
+              : sensorStatus === "error"
+                ? "OFFLINE · MOCK"
+                : "CONNECTING"}
           </div>
-        )}
+          {selected && (
+            <div className="rounded-full bg-foreground/85 px-4 py-2 text-xs font-medium text-background backdrop-blur-md">
+              {BUILDINGS.find((b) => b.id === selected)?.name}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Map stage */}
