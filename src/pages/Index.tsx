@@ -95,9 +95,9 @@ const Index = () => {
           const cur = prev[b.id];
 
           // Prefer live sensor value if this building is mapped and the
-          // backend returned a usable number for that key. When multiple keys
-          // are provided, average them so one building can be driven by
-          // several sensors at once.
+          // backend returned usable numbers. When multiple keys are provided,
+          // their values are SUMMED (then clamped to 0..100) so one building
+          // can be driven by several sensors stacking together.
           let target = targetsRef.current[b.id];
           if (sensorData) {
             const keys = b.sensorKeys ?? (b.sensorKey ? [b.sensorKey] : []);
@@ -105,8 +105,8 @@ const Index = () => {
               .map((k) => sensorData[k])
               .filter((v): v is number => typeof v === "number");
             if (vals.length > 0) {
-              const avg = vals.reduce((a, c) => a + c, 0) / vals.length;
-              target = clamp(avg);
+              const sum = vals.reduce((a, c) => a + c, 0);
+              target = clamp(sum);
             }
           }
 
