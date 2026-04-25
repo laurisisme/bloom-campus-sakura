@@ -26,12 +26,14 @@ export function useSensorData(endpoint: string, intervalMs = 2000) {
         const res = await fetch(endpoint, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as SensorPayload;
+        console.log("[Sensor Data]", json); // Log sensor values to console
         if (cancelled.current) return;
         setData(json);
         setStatus("live");
       } catch (err) {
         if (cancelled.current) return;
         setStatus("error");
+        console.error("[Sensor Error]", err); // Log errors too
         // Keep last known data so flowers don't reset on a transient blip.
       }
     };
