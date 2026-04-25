@@ -191,7 +191,7 @@ const Flower = ({ bloomLevel, size = 56, label }: FlowerProps) => {
               "radial-gradient(circle, hsl(var(--sakura-center)) 0%, hsl(var(--sakura-center-deep)) 70%, hsl(var(--sakura-petal-deep)) 100%)",
             boxShadow:
               "0 0 6px hsl(var(--sakura-center) / 0.6), inset 0 0 4px hsl(var(--sakura-center-deep) / 0.6)",
-            transition: "transform 1200ms cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: `transform ${transitionMs}ms cubic-bezier(0.4, 0, 0.2, 1)`,
           }}
         />
       </div>
