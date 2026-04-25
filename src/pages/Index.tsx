@@ -21,10 +21,13 @@ const BUILDINGS: {
   x: number;
   y: number;
   size?: number;
+  // One building can be driven by one OR several sensors. When multiple keys
+  // are provided, their values are averaged to produce the bloom level.
   sensorKey?: string;
+  sensorKeys?: string[];
 }[] = [
   { id: "faculty", name: "Faculty Residence", x: 22, y: 32, sensorKey: "s1" },
-  { id: "residence", name: "Residence Hall", x: 33, y: 28, sensorKey: "s2" },
+  { id: "residence", name: "Residence Hall", x: 33, y: 28, sensorKeys: ["s1", "s2"] },
   { id: "service", name: "Service Building", x: 49, y: 30 },
   { id: "ugrad", name: "Undergraduate Student Residence", x: 73, y: 32 },
   { id: "water", name: "Water Pavilion", x: 34, y: 41 },
@@ -80,7 +83,8 @@ const Index = () => {
     const interval = setInterval(() => {
       // Occasionally pick new mock targets for unmapped buildings.
       BUILDINGS.forEach((b) => {
-        if (!b.sensorKey && Math.random() < 0.15) {
+        const isMapped = !!b.sensorKey || (b.sensorKeys && b.sensorKeys.length > 0);
+        if (!isMapped && Math.random() < 0.15) {
           targetsRef.current[b.id] = Math.random() * 100;
         }
       });
@@ -91,10 +95,19 @@ const Index = () => {
           const cur = prev[b.id];
 
           // Prefer live sensor value if this building is mapped and the
-          // backend returned a usable number for that key.
+          // backend returned a usable number for that key. When multiple keys
+          // are provided, average them so one building can be driven by
+          // several sensors at once.
           let target = targetsRef.current[b.id];
-          if (b.sensorKey && sensorData && typeof sensorData[b.sensorKey] === "number") {
-            target = clamp(sensorData[b.sensorKey]);
+          if (sensorData) {
+            const keys = b.sensorKeys ?? (b.sensorKey ? [b.sensorKey] : []);
+            const vals = keys
+              .map((k) => sensorData[k])
+              .filter((v): v is number => typeof v === "number");
+            if (vals.length > 0) {
+              const avg = vals.reduce((a, c) => a + c, 0) / vals.length;
+              target = clamp(avg);
+            }
           }
 
           next[b.id] = cur + (target - cur) * 0.18;
