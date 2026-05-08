@@ -144,12 +144,12 @@ const Index = () => {
 
       {/* Map stage */}
       <div className="relative mx-auto flex min-h-screen w-full items-center justify-center">
-        <div className="relative w-full max-w-[1600px]">
-          <div className="relative aspect-[1920/1180] w-full">
+        <div className="relative w-full">
+          <div className="relative aspect-[1920/1180] w-full scale-[1.35] origin-center">
             <img
               src={campusMap}
               alt="Duke Kunshan University hand-drawn campus map"
-              className="absolute inset-0 h-full w-full select-none object-contain"
+              className="absolute inset-0 h-full w-full select-none object-cover"
               draggable={false}
             />
 
