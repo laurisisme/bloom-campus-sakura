@@ -25,11 +25,11 @@ const BUILDINGS: {
   // this building = light + sound from that node, clamped to 0..100.
   nodeKey?: string;
 }[] = [
-  { id: "ugrad", name: "Undergraduate Student Residence", x: 73, y: 32, nodeKey: "node4" },
-  { id: "academic", name: "Academic Building", x: 46, y: 45, nodeKey: "node1" },
-  { id: "library", name: "Library", x: 60, y: 52, nodeKey: "node3" },
-  { id: "community", name: "Community Center", x: 70, y: 50, nodeKey: "node5" },
-  { id: "innovation", name: "Innovation Building", x: 33, y: 56, nodeKey: "node2" },
+  { id: "ugrad", name: "Undergraduate Student Residence", x: 75, y: 47, nodeKey: "node4" },
+  { id: "academic", name: "Academic Building", x: 42, y: 56, nodeKey: "node1" },
+  { id: "library", name: "Library", x: 56, y: 60, nodeKey: "node3" },
+  { id: "community", name: "Community Center", x: 67, y: 60, nodeKey: "node5" },
+  { id: "innovation", name: "Innovation Building", x: 33, y: 64, nodeKey: "node2" },
 ];
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
@@ -145,7 +145,7 @@ const Index = () => {
       {/* Map stage */}
       <div className="relative mx-auto flex min-h-screen w-full items-center justify-center">
         <div className="relative w-full">
-          <div className="relative aspect-[1920/1180] w-full scale-[1.35] origin-center">
+          <div className="relative aspect-[1920/1358] w-full scale-[1.35] origin-center">
             <img
               src={campusMap}
               alt="Duke Kunshan University hand-drawn campus map"
