@@ -21,31 +21,15 @@ const BUILDINGS: {
   x: number;
   y: number;
   size?: number;
-  // One building can be driven by one OR several sensors. When multiple keys
-  // are provided, their values are averaged to produce the bloom level.
-  sensorKey?: string;
-  sensorKeys?: string[];
+  // The node key in the backend payload (e.g. "node1"). The bloom level for
+  // this building = light + sound from that node, clamped to 0..100.
+  nodeKey?: string;
 }[] = [
-  { id: "faculty", name: "Faculty Residence", x: 22, y: 32, sensorKey: "s1" },
-  { id: "residence", name: "Residence Hall", x: 33, y: 28, sensorKeys: ["s1", "s2"] },
-  { id: "service", name: "Service Building", x: 49, y: 30 },
-  { id: "ugrad", name: "Undergraduate Student Residence", x: 73, y: 32 },
-  { id: "water", name: "Water Pavilion", x: 34, y: 41 },
-  { id: "conference", name: "Conference Center", x: 21, y: 47 },
-  { id: "academic", name: "Academic Building", x: 46, y: 45 },
-  { id: "grad", name: "Graduate Student Center", x: 60, y: 38 },
-  { id: "soccer", name: "Soccer Field", x: 84, y: 41 },
-  { id: "library", name: "Library", x: 60, y: 52 },
-  { id: "community", name: "Community Center", x: 70, y: 50 },
-  { id: "sports", name: "Sports Complex", x: 84, y: 53 },
-  { id: "pickleball", name: "Pickleball Court", x: 14, y: 56 },
-  { id: "observatory", name: "Observatory", x: 24, y: 60 },
-  { id: "innovation", name: "Innovation Building", x: 33, y: 56 },
-  { id: "whu", name: "WHU-Duke Research Institute", x: 48, y: 60 },
-  { id: "landmark", name: "Landmark Tower", x: 67, y: 62 },
-  { id: "admin", name: "Administration Building", x: 79, y: 60 },
-  { id: "employee", name: "Employee Center", x: 89, y: 62 },
-  { id: "visitor", name: "Visitor Center", x: 73, y: 70 },
+  { id: "ugrad", name: "Undergraduate Student Residence", x: 73, y: 32, nodeKey: "node4" },
+  { id: "academic", name: "Academic Building", x: 46, y: 45, nodeKey: "node1" },
+  { id: "library", name: "Library", x: 60, y: 52, nodeKey: "node3" },
+  { id: "community", name: "Community Center", x: 70, y: 50, nodeKey: "node5" },
+  { id: "innovation", name: "Innovation Building", x: 33, y: 56, nodeKey: "node2" },
 ];
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
@@ -83,8 +67,7 @@ const Index = () => {
     const interval = setInterval(() => {
       // Occasionally pick new mock targets for unmapped buildings.
       BUILDINGS.forEach((b) => {
-        const isMapped = !!b.sensorKey || (b.sensorKeys && b.sensorKeys.length > 0);
-        if (!isMapped && Math.random() < 0.15) {
+        if (!b.nodeKey && Math.random() < 0.15) {
           targetsRef.current[b.id] = Math.random() * 100;
         }
       });
@@ -94,19 +77,17 @@ const Index = () => {
         BUILDINGS.forEach((b) => {
           const cur = prev[b.id];
 
-          // Prefer live sensor value if this building is mapped and the
-          // backend returned usable numbers. When multiple keys are provided,
-          // their values are SUMMED (then clamped to 0..100) so one building
-          // can be driven by several sensors stacking together.
+          // Prefer live sensor value when available: bloom = light + sound,
+          // clamped to 0..100. Falls back to mock drift if the node is missing.
           let target = targetsRef.current[b.id];
-          if (sensorData) {
-            const keys = b.sensorKeys ?? (b.sensorKey ? [b.sensorKey] : []);
-            const vals = keys
-              .map((k) => sensorData[k])
-              .filter((v): v is number => typeof v === "number");
-            if (vals.length > 0) {
-              const sum = vals.reduce((a, c) => a + c, 0);
-              target = clamp(sum);
+          if (sensorData && b.nodeKey) {
+            const node = sensorData[b.nodeKey];
+            if (node) {
+              const light = typeof node.light === "number" ? node.light : 0;
+              const sound = typeof node.sound === "number" ? node.sound : 0;
+              if (typeof node.light === "number" || typeof node.sound === "number") {
+                target = clamp(light + sound);
+              }
             }
           }
 
